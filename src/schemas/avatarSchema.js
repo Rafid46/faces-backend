@@ -125,7 +125,7 @@ export function parseRenderRequest(req) {
     gender: req.body?.gender ?? req.query?.gender,
   });
 
-  const size = parsed.size ?? (parsed.format === 'svg' ? 480 : 1080);
+  const size = parsed.size ?? 480;
 
   const overrides = {};
   for (const key of traitOverrideKeys) {

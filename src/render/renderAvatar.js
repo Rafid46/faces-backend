@@ -14,7 +14,7 @@ export function renderSvg(character, { size = 480, transparent = false, thumbnai
 
 export async function renderImage(
   character,
-  { format = 'jpg', size = 1080, transparent = false, thumbnail = false } = {}
+  { format = 'jpg', size = 480, transparent = false, thumbnail = false } = {}
 ) {
   const normalized = format === 'jpeg' ? 'jpg' : format;
   const svg = renderSvg(character, { size, transparent, thumbnail });
