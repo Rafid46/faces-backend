@@ -12,6 +12,17 @@ export function renderSvg(character, { size = 480, transparent = false, thumbnai
   return markup.replace('<svg ', `<svg width="${width}" height="${height}" `);
 }
 
+const RASTER_CACHE_LIMIT = 100;
+const rasterCache = new Map();
+
+function rememberRaster(key, image) {
+  rasterCache.set(key, image);
+  if (rasterCache.size > RASTER_CACHE_LIMIT) {
+    rasterCache.delete(rasterCache.keys().next().value);
+  }
+  return image;
+}
+
 export async function renderImage(
   character,
   { format = 'jpg', size = 480, transparent = false, thumbnail = false } = {}
@@ -27,13 +38,20 @@ export async function renderImage(
     };
   }
 
+  const key = `${normalized}|${svg}`;
+  const cached = rasterCache.get(key);
+  if (cached) {
+    rasterCache.delete(key);
+    return rememberRaster(key, cached);
+  }
+
   if (normalized === 'png') {
     const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
-    return {
+    return rememberRaster(key, {
       buffer,
       contentType: 'image/png',
       ext: 'png',
-    };
+    });
   }
 
   const buffer = await sharp(Buffer.from(svg))
@@ -41,9 +59,9 @@ export async function renderImage(
     .jpeg({ quality: 92 })
     .toBuffer();
 
-  return {
+  return rememberRaster(key, {
     buffer,
     contentType: 'image/jpeg',
     ext: 'jpg',
-  };
+  });
 }

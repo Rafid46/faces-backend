@@ -12,7 +12,12 @@ import {
   parseRenderRequest,
 } from "../schemas/avatarSchema.js";
 
+const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
+const GALLERY_CACHE = "public, max-age=86400";
+const OPTIONS_CACHE = "public, max-age=3600";
+
 export function handleGetOptions(req, res) {
+  res.setHeader("Cache-Control", OPTIONS_CACHE);
   return res.status(200).json({
     success: true,
     data: getCatalog(),
@@ -105,6 +110,7 @@ export function handleGetGallery(req, res) {
   const query = parseGalleryQuery(req.query);
   const result = getGallery(query);
 
+  res.setHeader("Cache-Control", GALLERY_CACHE);
   return res.status(200).json({
     success: true,
     data: result,
@@ -131,6 +137,10 @@ export async function handleRenderFace(req, res, next) {
 
     const { buffer, contentType, ext } = result.data;
     const disposition = parsed.data.download ? "attachment" : "inline";
+    const deterministic = Boolean(
+      parsed.data.data || parsed.data.character !== undefined || parsed.data.seed
+    );
+    res.setHeader("Cache-Control", deterministic ? IMMUTABLE_CACHE : "no-store");
     res.setHeader("Content-Type", contentType);
     res.setHeader(
       "Content-Disposition",
